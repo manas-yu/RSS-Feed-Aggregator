@@ -43,3 +43,16 @@ func (cfg *apiConfig) handlerGetUser(w http.ResponseWriter, r *http.Request, dbU
 	respondWithJSON(w, 200, databaseUserToUser(dbUser))
 
 }
+func (cfg *apiConfig) handlerGetPostsForUser(w http.ResponseWriter, r *http.Request, dbUser database.User) {
+
+	posts, err := cfg.DB.GetPostsForUser(r.Context(), database.GetPostsForUserParams{
+		UserID: dbUser.ID,
+		Limit:  10,
+	})
+	if err != nil {
+		fmt.Println(err)
+		respondWithError(w, http.StatusInternalServerError, "Couldn't get posts")
+		return
+	}
+	respondWithJSON(w, 200, databasePostsToPosts(posts))
+}

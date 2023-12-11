@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
@@ -34,6 +35,7 @@ func main() {
 	}
 	queries := database.New(conn)
 	apiCfg := apiConfig{DB: queries}
+	go startScraping(queries, 10, time.Minute)
 	router := chi.NewRouter()
 	router.Use(cors.Handler(cors.Options{AllowedOrigins: []string{"https://*", "http://*"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
@@ -52,6 +54,7 @@ func main() {
 	v1Router.Post("/feed_follows", apiCfg.middlewareAuth(apiCfg.handlerFeedFollows))
 	v1Router.Get("/feed_follows", apiCfg.middlewareAuth(apiCfg.handlerGetUserFeedFollows))
 	v1Router.Delete("/feed_follows/{feedFollowId}", apiCfg.middlewareAuth(apiCfg.handlerDeleteFollow))
+	v1Router.Get("/posts", apiCfg.middlewareAuth(apiCfg.handlerGetPostsForUser))
 
 	srv := &http.Server{Handler: router, Addr: ":" + portString}
 	log.Printf("server starting in port %v", portString)
