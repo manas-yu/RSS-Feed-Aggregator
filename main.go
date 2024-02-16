@@ -37,12 +37,16 @@ func main() {
 	apiCfg := apiConfig{DB: queries}
 	go startScraping(queries, 10, time.Minute)
 	router := chi.NewRouter()
-	router.Use(cors.Handler(cors.Options{AllowedOrigins: []string{"https://*", "http://*"},
-		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"*"},
-		ExposedHeaders:   []string{"Link"},
-		AllowCredentials: false,
-		MaxAge:           300}))
+	router.Use(cors.Handler(
+		cors.Options{
+			AllowedOrigins:   []string{"https://*", "http://*"},
+			AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+			AllowedHeaders:   []string{"*"},
+			ExposedHeaders:   []string{"Link"},
+			AllowCredentials: false,
+			MaxAge:           300},
+	),
+	)
 	v1Router := chi.NewRouter()
 	router.Mount("/v1", v1Router)
 	v1Router.Get("/healthz", handlerReadiness)

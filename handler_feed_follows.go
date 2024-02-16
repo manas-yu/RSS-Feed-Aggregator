@@ -67,6 +67,7 @@ func (cfg *apiConfig) handlerDeleteFollow(w http.ResponseWriter, r *http.Request
 		respondWithError(w, http.StatusInternalServerError, "Couldn't delete follow")
 		return
 	}
+	fmt.Println("Deleted follow")
 	respondWithJSON(w, 200, struct{}{})
 
 }
