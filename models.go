@@ -59,6 +59,7 @@ type FeedFollow struct {
 	UpdatedAt time.Time `json:"updated_at"`
 	FeedId    uuid.UUID `json:"feed_id"`
 	UserId    uuid.UUID `json:"user_id"`
+	Name      string    `json:"name"`
 }
 
 func databaseFeedFollowToFeedFollow(dbFeedFollow database.FeedFollow) FeedFollow {
@@ -68,6 +69,7 @@ func databaseFeedFollowToFeedFollow(dbFeedFollow database.FeedFollow) FeedFollow
 		UpdatedAt: dbFeedFollow.UpdatedAt,
 		FeedId:    dbFeedFollow.FeedID,
 		UserId:    dbFeedFollow.UserID,
+		Name:      dbFeedFollow.Name.String,
 	}
 }
 

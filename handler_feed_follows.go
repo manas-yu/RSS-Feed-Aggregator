@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 
@@ -31,6 +32,7 @@ func (cfg *apiConfig) handlerFeedFollows(w http.ResponseWriter, r *http.Request,
 		UpdatedAt: time.Now().UTC(),
 		FeedID:    params.FeedId,
 		UserID:    user.ID,
+		Name:      sql.NullString{String: user.Name, Valid: true},
 	})
 	if err != nil {
 		fmt.Println(err)
@@ -54,20 +56,22 @@ func (cfg *apiConfig) handlerGetUserFeedFollows(w http.ResponseWriter, r *http.R
 }
 
 func (cfg *apiConfig) handlerDeleteFollow(w http.ResponseWriter, r *http.Request, user database.User) {
-	feedFollowIdString := chi.URLParam(r, "feedFollowId")
-	feedFollowId, err := uuid.Parse(feedFollowIdString)
+	feedFollowIDStr := chi.URLParam(r, "feedFollowId")
+	feedFollowID, err := uuid.Parse(feedFollowIDStr)
 	if err != nil {
-		fmt.Println(err)
-		respondWithError(w, http.StatusInternalServerError, "Couldn't parse id")
+		respondWithError(w, http.StatusBadRequest, "Invalid feed follow ID")
 		return
 	}
-	err = cfg.DB.DeleteFeedFollow(r.Context(), database.DeleteFeedFollowParams{UserID: user.ID, ID: feedFollowId})
+
+	err = cfg.DB.DeleteFeedFollow(r.Context(), database.DeleteFeedFollowParams{
+		UserID: user.ID,
+		ID:     feedFollowID,
+	})
 	if err != nil {
-		fmt.Println(err)
-		respondWithError(w, http.StatusInternalServerError, "Couldn't delete follow")
+		respondWithError(w, http.StatusInternalServerError, "Couldn't create feed follow")
 		return
 	}
-	fmt.Println("Deleted follow")
-	respondWithJSON(w, 200, struct{}{})
+
+	respondWithJSON(w, http.StatusOK, struct{ msg string }{msg: "deleted feed follow"})
 
 }

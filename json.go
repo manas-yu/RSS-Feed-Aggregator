@@ -14,7 +14,7 @@ func respondWithError(w http.ResponseWriter, code int, msg string) {
 	type errResponse struct {
 		Error string
 	}
-	respondWithJSON(w, code, errResponse{Error: "something went wrong"})
+	respondWithJSON(w, code, errResponse{Error: msg})
 
 }
 func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
