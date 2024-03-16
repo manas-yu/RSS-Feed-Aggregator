@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 
 	"github.com/manas-yu/rssagg/internal/database"
@@ -38,9 +39,17 @@ func (cfg *apiConfig) handlerUsersCreate(w http.ResponseWriter, r *http.Request)
 
 	respondWithJSON(w, http.StatusOK, databaseUserToUser(user))
 }
-func (cfg *apiConfig) handlerGetUser(w http.ResponseWriter, r *http.Request, dbUser database.User) {
+func (cfg *apiConfig) handlerGetUser(w http.ResponseWriter, r *http.Request) {
+	usernameStr := chi.URLParam(r, "username")
 
-	respondWithJSON(w, 200, databaseUserToUser(dbUser))
+	user, err := cfg.DB.GetUserByName(r.Context(), usernameStr)
+	if err != nil {
+		fmt.Println(err)
+		respondWithError(w, http.StatusInternalServerError, "Couldn't get user")
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, databaseUserToUser(user))
 
 }
 func (cfg *apiConfig) handlerGetPostsForUser(w http.ResponseWriter, r *http.Request, dbUser database.User) {
