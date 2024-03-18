@@ -43,13 +43,39 @@ func (cfg *apiConfig) handlerFeedsCreate(w http.ResponseWriter, r *http.Request,
 }
 
 func (cfg *apiConfig) handlerGetFeeds(w http.ResponseWriter, r *http.Request) {
-
-	feeds, err := cfg.DB.GetFeed(r.Context())
-	if err != nil {
-		fmt.Println(err)
-		respondWithError(w, http.StatusInternalServerError, "Couldn't create feed")
+	// Make sure that the writer supports flushing.
+	flusher, ok := w.(http.Flusher)
+	if !ok {
+		http.Error(w, "Streaming unsupported!", http.StatusInternalServerError)
 		return
 	}
 
-	respondWithJSON(w, http.StatusOK, databaseFeedsToFeed(feeds))
+	// Set the headers related to event streaming.
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	for {
+		feeds, err := cfg.DB.GetFeed(r.Context())
+		if err != nil {
+			fmt.Println(err)
+			respondWithError(w, http.StatusInternalServerError, "Couldn't create feed")
+			return
+		}
+
+		feedJSON, err := json.Marshal(databaseFeedsToFeed(feeds))
+		if err != nil {
+			respondWithError(w, http.StatusInternalServerError, "Failed to encode feed")
+			return
+		}
+
+		fmt.Fprintf(w, "data: %s\n\n", feedJSON)
+
+		// Flush the data immediately instead of buffering it for later.
+		flusher.Flush()
+
+		// Sleep for a while before the next iteration to avoid high CPU usage.
+		time.Sleep(time.Second)
+	}
 }

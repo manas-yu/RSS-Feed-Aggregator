@@ -44,15 +44,41 @@ func (cfg *apiConfig) handlerFeedFollows(w http.ResponseWriter, r *http.Request,
 }
 
 func (cfg *apiConfig) handlerGetUserFeedFollows(w http.ResponseWriter, r *http.Request, user database.User) {
-
-	userFeedFollows, err := cfg.DB.GetFeedFollows(r.Context(), user.ID)
-	if err != nil {
-		fmt.Println(err)
-		respondWithError(w, http.StatusInternalServerError, "Couldn't get feed follows")
+	// Make sure that the writer supports flushing.
+	flusher, ok := w.(http.Flusher)
+	if !ok {
+		http.Error(w, "Streaming unsupported!", http.StatusInternalServerError)
 		return
 	}
 
-	respondWithJSON(w, http.StatusOK, databaseUserFeedFollowsToFeedFollows(userFeedFollows))
+	// Set the headers related to event streaming.
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	for {
+		userFeedFollows, err := cfg.DB.GetFeedFollows(r.Context(), user.ID)
+		if err != nil {
+			fmt.Println(err)
+			respondWithError(w, http.StatusInternalServerError, "Couldn't get feed follows")
+			return
+		}
+
+		feedFollowsJSON, err := json.Marshal(databaseUserFeedFollowsToFeedFollows(userFeedFollows))
+		if err != nil {
+			respondWithError(w, http.StatusInternalServerError, "Failed to encode feed follows")
+			return
+		}
+
+		fmt.Fprintf(w, "data: %s\n\n", feedFollowsJSON)
+
+		// Flush the data immediately instead of buffering it for later.
+		flusher.Flush()
+
+		// Sleep for a while before the next iteration to avoid high CPU usage.
+		time.Sleep(time.Second)
+	}
 }
 
 func (cfg *apiConfig) handlerDeleteFollow(w http.ResponseWriter, r *http.Request, user database.User) {
