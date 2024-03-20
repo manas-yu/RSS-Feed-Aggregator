@@ -57,6 +57,15 @@ func (cfg *apiConfig) handlerGetFeeds(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	for {
+		select {
+		case <-r.Context().Done():
+			// The client has closed the connection.
+			fmt.Println("connection closed in get feeds")
+			return
+		default:
+			// The client is still connected.
+		}
+
 		feeds, err := cfg.DB.GetFeed(r.Context())
 		if err != nil {
 			fmt.Println(err)
@@ -66,10 +75,12 @@ func (cfg *apiConfig) handlerGetFeeds(w http.ResponseWriter, r *http.Request) {
 
 		feedJSON, err := json.Marshal(databaseFeedsToFeed(feeds))
 		if err != nil {
+			fmt.Println(err)
 			respondWithError(w, http.StatusInternalServerError, "Failed to encode feed")
 			return
 		}
 
+		// Write to the response body only after all error checks have passed.
 		fmt.Fprintf(w, "data: %s\n\n", feedJSON)
 
 		// Flush the data immediately instead of buffering it for later.

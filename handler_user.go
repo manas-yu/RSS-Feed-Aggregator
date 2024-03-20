@@ -67,6 +67,15 @@ func (cfg *apiConfig) handlerGetPostsForUser(w http.ResponseWriter, r *http.Requ
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	for {
+		select {
+		case <-r.Context().Done():
+			// The client has closed the connection.
+			fmt.Println("connection closed in posts")
+			return
+		default:
+			// The client is still connected.
+		}
+
 		posts, err := cfg.DB.GetPostsForUser(r.Context(), database.GetPostsForUserParams{
 			UserID: dbUser.ID,
 			Limit:  10,
