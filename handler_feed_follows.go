@@ -58,15 +58,6 @@ func (cfg *apiConfig) handlerGetUserFeedFollows(w http.ResponseWriter, r *http.R
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	for {
-		select {
-		case <-r.Context().Done():
-			// The client has closed the connection.
-			fmt.Println("connection closed in feed follows")
-			return
-		default:
-			// The client is still connected.
-		}
-
 		userFeedFollows, err := cfg.DB.GetFeedFollows(r.Context(), user.ID)
 		if err != nil {
 			fmt.Println(err)
