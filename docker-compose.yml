@@ -1,0 +1,20 @@
+version: '3'
+services:
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    depends_on:
+      - migrator
+  db:
+    image: postgres
+    environment:
+      POSTGRES_PASSWORD: abj1195
+      POSTGRES_DB: rssagg
+    ports:
+      - "5432:5432"
+  migrator:
+    image: goose-migrator
+    depends_on:
+      - db
+    command: goose postgres "postgres://postgres:abj1195@db:5432/rssagg?sslmode=disable" up

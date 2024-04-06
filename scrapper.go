@@ -45,6 +45,7 @@ func scrapeFeed(db *database.Queries, wg *sync.WaitGroup, feed database.Feed) {
 		log.Printf("Couldn't collect feed %s: %v", feed.Name, err)
 		return
 	}
+	log.Printf("Feed %s collected, %v posts found", feed.Name, len(rssFeed.Channel.Item))
 	for _, item := range rssFeed.Channel.Item {
 		description := sql.NullString{}
 		if item.Description != "" {
