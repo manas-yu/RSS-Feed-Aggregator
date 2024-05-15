@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rss-agg-db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rss-agg-db
+  template:
+    metadata:
+      labels:
+        app: rss-agg-db
+    spec:
+      containers:
+        - name: rss-agg-db
+          image: postgres
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_PASSWORD
+              value: abj1195
+            - name: POSTGRES_DB
+              value: rssagg
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "250m"
+            limits:
+              memory: "128Mi"
+              cpu: "500m"

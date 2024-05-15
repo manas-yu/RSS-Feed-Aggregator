@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rss-agg-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rss-agg-app
+  template:
+    metadata:
+      labels:
+        app: rss-agg-app
+    spec:
+      containers:
+        - name: rss-agg-app
+          image: rss-agg
+          ports:
+            - containerPort: 8080
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "250m"
+            limits:
+              memory: "128Mi"
+              cpu: "500m"
+          env:
+            - name: DB_CONNECTION_STRING
+              value: postgres://postgres:abj1195@rss-agg-db:5432/rssagg?sslmode=disable
